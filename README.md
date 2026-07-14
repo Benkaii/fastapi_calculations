@@ -1,130 +1,150 @@
-# FastAPI PostgreSQL Calculator
+# FastAPI Secure Users
 
 ## Overview
 
-This project was completed for Module 9 of IS601. The objective was to integrate a FastAPI application with a PostgreSQL database using Docker Compose and perform SQL operations through pgAdmin.
+This project demonstrates a secure user management API built with FastAPI, SQLAlchemy, and Pydantic. It implements secure password hashing, input validation, PostgreSQL database integration, automated testing, containerization with Docker, and a complete CI/CD pipeline using GitHub Actions.
 
-The project demonstrates:
+## Features
 
-- Docker containerization
-- FastAPI application deployment
+- Secure SQLAlchemy User model
+- Password hashing and verification
+- Pydantic request and response validation
 - PostgreSQL database integration
-- pgAdmin database management
-- SQL CRUD operations
-- One-to-many relationships using foreign keys
+- Unit, integration, and end-to-end tests
+- Docker containerization
+- GitHub Actions CI/CD pipeline
+- Trivy security vulnerability scanning
+- Automatic Docker Hub deployment
 
 ---
 
-## Project Structure
+## Running the Application
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Benkaii/fastapi_secure_users.git
+cd fastapi_secure_users
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Start the application:
+
+```bash
+uvicorn main:app --reload
+```
+
+The API will be available at:
 
 ```
-.
-├── app/
-├── templates/
-├── tests/
-├── docker-compose.yml
-├── Dockerfile
-├── main.py
-├── requirements.txt
-├── module9_queries.sql
-└── README.md
+http://127.0.0.1:8000
 ```
+
+Swagger documentation:
+
+```
+http://127.0.0.1:8000/docs
+```
+
+---
+
+## Running Tests Locally
+
+Run all tests:
+
+```bash
+pytest
+```
+
+Run only unit tests:
+
+```bash
+pytest tests/unit -v
+```
+
+Run only integration tests:
+
+```bash
+pytest tests/integration -v
+```
+
+Run only end-to-end tests:
+
+```bash
+pytest tests/e2e -v
+```
+
+Run tests with coverage:
+
+```bash
+pytest --cov=app --cov-report=term-missing
+```
+
+---
+
+## Docker
+
+Build the Docker image:
+
+```bash
+docker build -t fastapi_secure_users .
+```
+
+Run the Docker container:
+
+```bash
+docker run -p 8000:8000 fastapi_secure_users
+```
+
+---
+
+## Docker Hub Repository
+
+Docker Image:
+
+https://hub.docker.com/r/benkaii/fastapi_secure_users
+
+Pull the latest image:
+
+```bash
+docker pull benkaii/fastapi_secure_users:latest
+```
+
+---
+
+## GitHub Repository
+
+https://github.com/Benkaii/fastapi_secure_users
+
+---
+
+## CI/CD Pipeline
+
+GitHub Actions automatically performs the following:
+
+- Runs unit tests
+- Runs integration tests with PostgreSQL
+- Runs end-to-end tests
+- Performs Trivy security scanning
+- Builds the Docker image
+- Pushes the Docker image to Docker Hub after successful validation
 
 ---
 
 ## Technologies Used
 
-- Python 3
+- Python 3.10
 - FastAPI
+- SQLAlchemy
 - PostgreSQL
-- pgAdmin 4
+- Pydantic
+- Pytest
+- Playwright
 - Docker
-- Docker Compose
-- Git
-- GitHub
-
----
-
-## Running the Project
-
-Clone the repository:
-
-```bash
-git clone https://github.com/Benkaii/fastapi_postgres_calculator.git
-```
-
-Move into the project directory:
-
-```bash
-cd fastapi_postgres_calculator
-```
-
-Build and start the containers:
-
-```bash
-docker compose up --build
-```
-
----
-
-## Services
-
-| Service | URL |
-|----------|----------------------------|
-| FastAPI | http://localhost:8000 |
-| pgAdmin | http://localhost:5050 |
-| PostgreSQL | localhost:5432 |
-
----
-
-## Database Operations
-
-The SQL commands used for this assignment are included in:
-
-```
-module9_queries.sql
-```
-
-The script demonstrates:
-
-- Creating tables
-- Inserting records
-- Querying data
-- Joining tables
-- Updating records
-- Deleting records
-
----
-
-## Database Schema
-
-### users
-
-- id
-- username
-- email
-- created_at
-
-### calculations
-
-- id
-- operation
-- operand_a
-- operand_b
-- result
-- timestamp
-- user_id
-
-The `calculations.user_id` field references the `users.id` primary key, demonstrating a one-to-many relationship.
-
----
-
-## Assignment Learning Outcomes
-
-This project demonstrates:
-
-- Containerizing applications with Docker
-- Integrating Python applications with PostgreSQL
-- Executing SQL CRUD operations
-- Managing relational databases with pgAdmin
-- Implementing foreign key relationships
+- GitHub Actions
+- Trivy
