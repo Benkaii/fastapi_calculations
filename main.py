@@ -1,15 +1,23 @@
 import logging
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field, field_validator
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from app.database import Base, engine
-from app.models import User  # Registers the User model with SQLAlchemy
+from app.crud import (
+    create_user,
+    get_user_by_email,
+    get_user_by_username,
+)
+from app.database import Base, engine, get_db
+from app.models import User
 from app.operations import add, divide, multiply, subtract
+from app.schemas import UserCreate, UserRead
 
 
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="FastAPI Secure Users Calculator")
 
-# Create SQLAlchemy tables that do not already exist.
+# Creates any SQLAlchemy tables that do not already exist.
 Base.metadata.create_all(bind=engine)
 
 templates = Jinja2Templates(directory="templates")
@@ -49,10 +57,11 @@ async def http_exception_handler(
     exc: HTTPException,
 ) -> JSONResponse:
     logger.error(
-        "HTTPException on %s: %s",
+        "HTTP exception on %s: %s",
         request.url.path,
         exc.detail,
     )
+
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": exc.detail},
@@ -76,18 +85,73 @@ async def validation_exception_handler(
     )
 
     return JSONResponse(
-        status_code=400,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"error": error_messages},
     )
 
 
 @app.get("/")
 async def read_root(request: Request):
-    """Serve the calculator homepage."""
+    """Serve the calculator webpage."""
     return templates.TemplateResponse(
         request=request,
         name="index.html",
     )
+
+
+@app.post(
+    "/users",
+    response_model=UserRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def register_user(
+    user_data: UserCreate,
+    db: Session = Depends(get_db),
+) -> User:
+    """Create a user while storing only the password hash."""
+    if get_user_by_username(db, user_data.username):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already exists",
+        )
+
+    if get_user_by_email(db, user_data.email):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email already exists",
+        )
+
+    try:
+        user = create_user(db, user_data)
+        logger.info("Created user: %s", user.username)
+        return user
+    except IntegrityError as error:
+        db.rollback()
+        logger.error("Database integrity error: %s", error)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username or email already exists",
+        ) from error
+
+
+@app.get(
+    "/users/{username}",
+    response_model=UserRead,
+)
+def read_user(
+    username: str,
+    db: Session = Depends(get_db),
+) -> User:
+    """Retrieve a user without returning the password hash."""
+    user = get_user_by_username(db, username)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return user
 
 
 @app.post(
@@ -96,10 +160,10 @@ async def read_root(request: Request):
     responses={400: {"model": ErrorResponse}},
 )
 async def add_route(operation: OperationRequest) -> OperationResponse:
-    """Add two numbers."""
     try:
-        result = add(operation.a, operation.b)
-        return OperationResponse(result=result)
+        return OperationResponse(
+            result=add(operation.a, operation.b)
+        )
     except Exception as error:
         logger.error("Add operation error: %s", error)
         raise HTTPException(
@@ -114,10 +178,10 @@ async def add_route(operation: OperationRequest) -> OperationResponse:
     responses={400: {"model": ErrorResponse}},
 )
 async def subtract_route(operation: OperationRequest) -> OperationResponse:
-    """Subtract two numbers."""
     try:
-        result = subtract(operation.a, operation.b)
-        return OperationResponse(result=result)
+        return OperationResponse(
+            result=subtract(operation.a, operation.b)
+        )
     except Exception as error:
         logger.error("Subtract operation error: %s", error)
         raise HTTPException(
@@ -132,10 +196,10 @@ async def subtract_route(operation: OperationRequest) -> OperationResponse:
     responses={400: {"model": ErrorResponse}},
 )
 async def multiply_route(operation: OperationRequest) -> OperationResponse:
-    """Multiply two numbers."""
     try:
-        result = multiply(operation.a, operation.b)
-        return OperationResponse(result=result)
+        return OperationResponse(
+            result=multiply(operation.a, operation.b)
+        )
     except Exception as error:
         logger.error("Multiply operation error: %s", error)
         raise HTTPException(
@@ -153,10 +217,10 @@ async def multiply_route(operation: OperationRequest) -> OperationResponse:
     },
 )
 async def divide_route(operation: OperationRequest) -> OperationResponse:
-    """Divide two numbers."""
     try:
-        result = divide(operation.a, operation.b)
-        return OperationResponse(result=result)
+        return OperationResponse(
+            result=divide(operation.a, operation.b)
+        )
     except ValueError as error:
         logger.error("Divide operation error: %s", error)
         raise HTTPException(
