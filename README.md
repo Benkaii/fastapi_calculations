@@ -1,140 +1,113 @@
-# FastAPI Secure Users
+# FastAPI Calculation Model
 
 ## Overview
 
-This project demonstrates a secure user management API built with FastAPI, SQLAlchemy, and Pydantic. It implements secure password hashing, input validation, PostgreSQL database integration, automated testing, containerization with Docker, and a complete CI/CD pipeline using GitHub Actions.
+This project builds on the secure FastAPI user application from Module 10 by adding a SQLAlchemy Calculation model, Pydantic validation, calculation factory logic, PostgreSQL integration tests, and automated Docker deployment.
+
+The Calculation model supports addition, subtraction, multiplication, and division. Calculations are associated with valid users through a foreign-key relationship.
 
 ## Features
 
-- Secure SQLAlchemy User model
-- Password hashing and verification
-- Pydantic request and response validation
-- PostgreSQL database integration
-- Unit, integration, and end-to-end tests
+- SQLAlchemy User and Calculation models
+- Calculation fields for `a`, `b`, `type`, `result`, and `user_id`
+- Foreign-key relationship between calculations and users
+- Pydantic `CalculationCreate` and `CalculationRead` schemas
+- Validation for supported calculation types
+- Division-by-zero validation
+- Factory pattern for calculation operations
+- Unit and PostgreSQL integration tests
 - Docker containerization
 - GitHub Actions CI/CD pipeline
-- Trivy security vulnerability scanning
+- Trivy container security scanning
 - Automatic Docker Hub deployment
 
----
-
-## Running the Application
-
-Clone the repository:
+## Clone the Repository
 
 ```bash
-git clone https://github.com/Benkaii/fastapi_secure_users.git
-cd fastapi_secure_users
+git clone https://github.com/Benkaii/fastapi_calculations.git
+cd fastapi_calculations
 ```
 
-Install dependencies:
+## Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-Start the application:
+## Run with Docker Compose
 
 ```bash
-uvicorn main:app --reload
+docker compose up -d --build
 ```
 
-The API will be available at:
+The FastAPI application will be available at:
 
-```
-http://127.0.0.1:8000
+```text
+http://localhost:8000
 ```
 
 Swagger documentation:
 
+```text
+http://localhost:8000/docs
 ```
-http://127.0.0.1:8000/docs
-```
 
----
+## Run Tests Locally
 
-## Running Tests Locally
-
-Run all tests:
+Run unit and integration tests inside Docker:
 
 ```bash
-pytest
+docker compose exec web pytest tests/unit tests/integration -v
 ```
 
-Run only unit tests:
+Run unit tests only:
 
 ```bash
 pytest tests/unit -v
 ```
 
-Run only integration tests:
+Run integration tests only:
 
 ```bash
 pytest tests/integration -v
 ```
 
-Run only end-to-end tests:
-
-```bash
-pytest tests/e2e -v
-```
-
 Run tests with coverage:
 
 ```bash
-pytest --cov=app --cov-report=term-missing
+pytest tests/unit tests/integration --cov=app --cov-report=term-missing
 ```
 
----
+## Docker Hub
 
-## Docker
+Docker Hub repository:
 
-Build the Docker image:
-
-```bash
-docker build -t fastapi_secure_users .
+```text
+https://hub.docker.com/r/benkaii/fastapi_calculations
 ```
-
-Run the Docker container:
-
-```bash
-docker run -p 8000:8000 fastapi_secure_users
-```
-
----
-
-## Docker Hub Repository
-
-Docker Image:
-
-https://hub.docker.com/r/benkaii/fastapi_secure_users
 
 Pull the latest image:
 
 ```bash
-docker pull benkaii/fastapi_secure_users:latest
+docker pull benkaii/fastapi_calculations:latest
 ```
-
----
 
 ## GitHub Repository
 
-https://github.com/Benkaii/fastapi_secure_users
-
----
+```text
+https://github.com/Benkaii/fastapi_calculations
+```
 
 ## CI/CD Pipeline
 
-GitHub Actions automatically performs the following:
+GitHub Actions automatically:
 
-- Runs unit tests
-- Runs integration tests with PostgreSQL
-- Runs end-to-end tests
-- Performs Trivy security scanning
+- Starts a PostgreSQL service
+- Runs unit and integration tests
+- Enforces test coverage
 - Builds the Docker image
-- Pushes the Docker image to Docker Hub after successful validation
-
----
+- Scans the image with Trivy
+- Pushes the image to Docker Hub after successful testing and scanning
 
 ## Technologies Used
 
@@ -144,7 +117,6 @@ GitHub Actions automatically performs the following:
 - PostgreSQL
 - Pydantic
 - Pytest
-- Playwright
 - Docker
 - GitHub Actions
 - Trivy
